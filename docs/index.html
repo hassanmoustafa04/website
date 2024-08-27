@@ -1,12 +1,114 @@
 <!DOCTYPE HTML>
 <html>
+
 <head>
     <title>Hassan Moustafa - Portfolio</title>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
     <link rel="stylesheet" href="assets/css/main.css" />
+    <style>
+        /* Modern styles for interactive skills */
+        .skills-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            justify-items: center;
+            margin-top: 20px;
+        }
+
+        .skill-item {
+            background-color: #f5f5f5;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            width: 100%;
+            max-width: 180px;
+        }
+
+        .skill-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .skill-item h4 {
+            margin: 0;
+            font-size: 1.1em;
+            font-weight: 600;
+            color: #333;
+        }
+
+        /* Optional: Additional hover effect */
+        .skill-item::before {
+            content: '';
+            display: block;
+            height: 5px;
+            width: 0;
+            background-color: #007BFF;
+            transition: width 0.3s ease;
+            margin-bottom: 10px;
+        }
+
+        .skill-item:hover::before {
+            width: 100%;
+        }
+
+        /* Experience item layout */
+        .experience-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .experience-item img {
+            width: 80px;
+            height: auto;
+            margin-right: 20px;
+            border-radius: 8px;
+        }
+
+        .experience-item h3 {
+            margin: 0;
+            font-size: 1.5em;
+            color: #fff;
+        }
+
+        .experience-item p {
+            margin: 5px 0 0;
+            color: #fff;
+        }
+
+        /* Contact section styling */
+        .contact-section {
+            text-align: center;
+            padding: 40px 0;
+        }
+
+        .contact-section h2 {
+            margin-bottom: 20px;
+            font-size: 2em;
+            color: #fff;
+        }
+
+        .contact-section a {
+            font-size: 1.2em;
+            color: #007BFF;
+            text-decoration: none;
+            background-color: #fff;
+            padding: 10px 20px;
+            border-radius: 5px;
+            transition: background-color 0.3s ease, color 0.3s ease;
+        }
+
+        .contact-section a:hover {
+            background-color: #007BFF;
+            color: #fff;
+        }
+    </style>
     <noscript><link rel="stylesheet" href="assets/css/noscript.css" /></noscript>
 </head>
+
 <body class="is-preload">
 
     <!-- Sidebar -->
@@ -16,6 +118,7 @@
                 <ul>
                     <li><a href="#intro">About Me</a></li>
                     <li><a href="#experience">Experience</a></li>
+                    <li><a href="#skills">Skills</a></li>
                     <li><a href="#projects">Projects</a></li>
                     <li><a href="#resume">Resume</a></li>
                     <li><a href="#contact">Contact</a></li>
@@ -49,24 +152,111 @@
                 <h2>Experience</h2>
                 <section>
                     <div class="experience-item">
-                        <img src="images/dell-logo.jpg" alt="Dell Technologies" style="width: 50px;" />
-                        <h3>Software Engineer Intern - Dell Technologies</h3>
-                        <p>Engineered an AI-driven virtual assistant and developed multiple applications with C# and .NET technologies, contributing to the innovation of enterprise solutions.</p>
+                        <img src="images/dell-logo.jpg" alt="Dell Technologies" />
+                        <div>
+                            <h3>Software Engineer Intern - Dell Technologies</h3>
+                            <p>Engineered an AI-driven virtual assistant and developed multiple applications with C# and .NET technologies, contributing to the innovation of enterprise solutions.</p>
+                        </div>
                     </div>
                     <div class="experience-item">
-                        <img src="images/dell-logo.jpg" alt="Dell Technologies" style="width: 50px;" />
-                        <h3>Software Engineer Intern - Dell Technologies</h3>
-                        <p>Developed APIs and optimized data management processes, ensuring robust security and high performance in large-scale enterprise projects.</p>
+                        <img src="images/dell-logo.jpg" alt="Dell Technologies" />
+                        <div>
+                            <h3>Software Engineer Intern - Dell Technologies</h3>
+                            <p>Developed APIs and optimized data management processes, ensuring robust security and high performance in large-scale enterprise projects.</p>
+                        </div>
                     </div>
                     <div class="experience-item">
-                        <img src="images/asu.jpg" alt="asu" style="width: 50px;" />
-                        <h3>Computer Support Specialist - ASU</h3>
-                        <p>Provided technical support to faculty and students, significantly improving the university’s technology infrastructure and operational efficiency.</p>
+                        <img src="images/asu.jpg" alt="ASU" />
+                        <div>
+                            <h3>Computer Support Specialist - ASU</h3>
+                            <p>Provided technical support to faculty and students, significantly improving the university’s technology infrastructure and operational efficiency.</p>
+                        </div>
                     </div>
                 </section>
                 <ul class="actions">
                     <li><a href="#projects" class="button">View Projects</a></li>
                 </ul>
+            </div>
+        </section>
+
+        <!-- Skills -->
+        <section id="skills" class="wrapper style1 fade-up">
+            <div class="inner">
+                <h2>Technical Skills</h2>
+                <div class="skills-container">
+                    <div class="skill-item">
+                        <h4>Java</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>Python</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>C++</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>C#</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>Swift</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>JavaScript</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>Node.js</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>AngularJS</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>HTML</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>CSS</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>SQL</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>Spark</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>MongoDB</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>PostgreSQL</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>GitHub</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>Git</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>Bitbucket</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>Xcode</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>DataGrip</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>Postman</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>Firebase</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>Visual Studio Code</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>Android Studio</h4>
+                    </div>
+                    <div class="skill-item">
+                        <h4>Jenkins</h4>
+                    </div>
+                </div>
             </div>
         </section>
 
@@ -114,27 +304,10 @@
 
         <!-- Contact -->
         <section id="contact" class="wrapper style1 fade-up">
-            <div class="inner">
+            <div class="inner contact-section">
                 <h2>Contact</h2>
-                <form method="post" action="#">
-                    <div class="fields">
-                        <div class="field half">
-                            <label for="name">Name</label>
-                            <input type="text" name="name" id="name" />
-                        </div>
-                        <div class="field half">
-                            <label for="email">Email</label>
-                            <input type="text" name="email" id="email" />
-                        </div>
-                        <div class="field">
-                            <label for="message">Message</label>
-                            <textarea name="message" id="message" rows="5"></textarea>
-                        </div>
-                    </div>
-                    <ul class="actions">
-                        <li><input type="submit" value="Send Message" class="primary" /></li>
-                    </ul>
-                </form>
+                <p>Feel free to reach out to me via email:</p>
+                <a href="mailto:hmousta1@asu.edu">hmousta1@asu.edu</a>
             </div>
         </section>
 
@@ -144,7 +317,7 @@
     <footer id="footer" class="wrapper style1-alt">
         <div class="inner">
             <ul class="menu">
-                <li>&copy; Hassan Moustafa. All rights reserved.</li><li>Design: <a href="http://html5up.net">HTML5 UP</a></li>
+                <li>&copy; Hassan Moustafa. All rights reserved.</li>
             </ul>
         </div>
     </footer>
@@ -159,4 +332,5 @@
     <script src="assets/js/main.js"></script>
 
 </body>
+
 </html>
