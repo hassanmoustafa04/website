@@ -1,0 +1,1843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Portfolio</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --nvidia-green: #76b900;
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(15, 15, 25, 0.95);
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+        }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            overflow: hidden;
+            cursor: grab;
+        }
+        
+        body:active {
+            cursor: grabbing;
+        }
+        
+        #canvas-container {
+            width: 100vw;
+            height: 100vh;
+            position: fixed;
+            top: 0;
+            left: 0;
+        }
+        
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 24px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 100;
+            pointer-events: none;
+        }
+        
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--nvidia-green);
+            letter-spacing: -1px;
+            pointer-events: auto;
+        }
+        
+        .logo span {
+            color: white;
+        }
+        
+        .header-right {
+            display: flex;
+            gap: 20px;
+            pointer-events: auto;
+        }
+        
+        .header-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+        }
+        
+        .header-btn:hover {
+            background: var(--nvidia-green);
+            border-color: var(--nvidia-green);
+            color: black;
+        }
+        
+        /* Intro overlay */
+        .intro-card {
+            position: fixed;
+            bottom: 40px;
+            left: 40px;
+            max-width: 420px;
+            background: var(--bg-card);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 32px;
+            z-index: 100;
+            backdrop-filter: blur(20px);
+            transition: all 0.4s ease;
+        }
+        
+        .intro-card.hidden {
+            opacity: 0;
+            transform: translateY(20px);
+            pointer-events: none;
+        }
+        
+        .intro-tag {
+            display: inline-block;
+            background: rgba(118, 185, 0, 0.15);
+            border: 1px solid var(--nvidia-green);
+            color: var(--nvidia-green);
+            padding: 6px 12px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            margin-bottom: 16px;
+            border-radius: 4px;
+        }
+        
+        .intro-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 12px;
+            line-height: 1.2;
+        }
+        
+        .intro-title .highlight {
+            color: var(--nvidia-green);
+        }
+        
+        .intro-subtitle {
+            color: var(--text-secondary);
+            font-size: 15px;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        
+        .intro-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            padding-top: 16px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .intro-hint strong {
+            color: var(--nvidia-green);
+        }
+        
+        /* Interactive hotspots */
+        .hotspot-labels {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 50;
+        }
+        
+        .hotspot-label {
+            position: absolute;
+            background: rgba(118, 185, 0, 0.9);
+            color: black;
+            padding: 8px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            white-space: nowrap;
+            pointer-events: auto;
+            cursor: pointer;
+        }
+        
+        .hotspot-label.visible {
+            opacity: 1;
+        }
+        
+        .hotspot-label::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-left: 6px solid transparent;
+            border-right: 6px solid transparent;
+            border-top: 8px solid rgba(118, 185, 0, 0.9);
+        }
+        
+        /* Info panels */
+        .info-panel {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: var(--bg-card);
+            border: 1px solid rgba(118, 185, 0, 0.3);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            backdrop-filter: blur(30px);
+        }
+        
+        .info-panel.active {
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+            pointer-events: auto;
+        }
+        
+        .info-panel-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 24px;
+        }
+        
+        .info-panel-tag {
+            color: var(--nvidia-green);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .info-panel-title {
+            font-size: 28px;
+            font-weight: 700;
+        }
+        
+        .close-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .close-btn:hover {
+            background: var(--nvidia-green);
+            color: black;
+        }
+        
+        .info-content p {
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 20px;
+            font-size: 15px;
+        }
+        
+        /* Timeline */
+        .timeline {
+            margin-top: 24px;
+        }
+        
+        .timeline-item {
+            padding-left: 24px;
+            border-left: 2px solid var(--nvidia-green);
+            padding-bottom: 28px;
+            position: relative;
+        }
+        
+        .timeline-item:last-child {
+            padding-bottom: 0;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            background: var(--nvidia-green);
+            border-radius: 50%;
+        }
+        
+        .timeline-date {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--nvidia-green);
+            font-size: 12px;
+            margin-bottom: 6px;
+        }
+        
+        .timeline-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .timeline-company {
+            color: var(--text-primary);
+            font-size: 17px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            font-weight: 600;
+        }
+        
+        .timeline-desc {
+            color: var(--text-secondary);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+        
+        .company-logo {
+            width: 80px;
+            height: 80px;
+            object-fit: contain;
+            margin-right: 20px;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            flex-shrink: 0;
+        }
+        
+        .education-logo {
+            width: 140px;
+            height: 140px;
+            object-fit: contain;
+            border-radius: 18px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 16px;
+        }
+        
+        .project-image {
+            height: 180px;
+            background: linear-gradient(135deg, var(--bg-secondary), #1a1a2a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 56px;
+            border-radius: 12px 12px 0 0;
+            overflow: hidden;
+        }
+        
+        .project-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .project-card {
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .project-tech {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: 12px;
+        }
+        
+        .project-tech span {
+            background: rgba(118, 185, 0, 0.15);
+            color: var(--nvidia-green);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Skills grid */
+        .skills-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .skill-tag {
+            background: rgba(118, 185, 0, 0.1);
+            border: 1px solid rgba(118, 185, 0, 0.3);
+            color: var(--nvidia-green);
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 13px;
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        /* Projects grid */
+        .projects-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 20px;
+        }
+        
+        .project-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .project-card:hover {
+            border-color: var(--nvidia-green);
+            transform: translateY(-4px);
+        }
+        
+        .project-icon {
+            font-size: 28px;
+            margin-bottom: 12px;
+        }
+        
+        .project-name {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .project-desc {
+            color: var(--text-secondary);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+        
+        /* Education card */
+        .education-item {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+        
+        .education-icon {
+            font-size: 40px;
+        }
+        
+        .education-info h3 {
+            font-size: 18px;
+            margin-bottom: 6px;
+        }
+        
+        .education-info .degree {
+            color: var(--nvidia-green);
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+        
+        .education-info .years {
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 12px;
+        }
+        
+        /* Contact section */
+        .contact-links {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+        
+        .contact-btn {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            text-align: center;
+            text-decoration: none;
+            color: white;
+            transition: all 0.3s ease;
+        }
+        
+        .contact-btn:hover {
+            border-color: var(--nvidia-green);
+            background: rgba(118, 185, 0, 0.1);
+        }
+        
+        .contact-btn-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+        
+        .contact-btn-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        /* Backdrop */
+        .backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 150;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+        
+        .backdrop.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        /* Controls hint */
+        .controls-hint {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            color: var(--text-secondary);
+            font-size: 11px;
+            font-family: 'JetBrains Mono', monospace;
+            text-align: right;
+            line-height: 1.8;
+            z-index: 100;
+        }
+        
+        .controls-hint kbd {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 4px 8px;
+            border-radius: 4px;
+            margin-right: 8px;
+        }
+        
+        /* Intro Screen */
+        #intro-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-dark);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 1s ease, transform 1s ease;
+        }
+        
+        #intro-screen.hidden {
+            opacity: 0;
+            transform: scale(1.05);
+            pointer-events: none;
+        }
+        
+        .intro-greeting {
+            color: var(--text-secondary);
+            font-size: 16px;
+            font-weight: 400;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+            opacity: 0;
+            animation: fadeUp 0.8s ease 0.2s forwards;
+        }
+        
+        .intro-name {
+            font-size: 52px;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -2px;
+            opacity: 0;
+            animation: fadeUp 0.8s ease 0.5s forwards;
+        }
+        
+        .intro-name span {
+            color: var(--nvidia-green);
+        }
+        
+        .intro-role {
+            color: var(--text-secondary);
+            font-size: 18px;
+            margin-top: 16px;
+            opacity: 0;
+            animation: fadeUp 0.8s ease 0.8s forwards;
+        }
+        
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            .intro-card {
+                left: 20px;
+                right: 20px;
+                bottom: 20px;
+                max-width: none;
+                padding: 24px;
+            }
+            
+            .intro-title {
+                font-size: 24px;
+            }
+            
+            .header {
+                padding: 16px 20px;
+            }
+            
+            .projects-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .controls-hint {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="intro-screen">
+        <div class="intro-greeting">Welcome</div>
+        <h1 class="intro-name">Hi, I'm <span>Hassan Moustafa</span></h1>
+        <p class="intro-role">Technical Product Engineer @ NVIDIA</p>
+    </div>
+
+    <div id="canvas-container"></div>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">Hassan<span>M</span></div>
+        <div class="header-right">
+            <a href="mailto:hmousta1@asu.edu" class="header-btn">Contact Me</a>
+        </div>
+    </header>
+
+    <!-- Intro Card -->
+    <div class="intro-card" id="introCard">
+        <span class="intro-tag">// WELCOME TO MY SPACE</span>
+        <h1 class="intro-title">Hi, I'm <span class="highlight">Hassan Moustafa</span></h1>
+        <p class="intro-subtitle">
+            Technical Product Engineer at NVIDIA, passionate about GPU computing, 
+            AI, and building innovative solutions. Explore my room to learn more about me!
+        </p>
+        <p class="intro-hint">
+            <strong>Click</strong> on objects to explore • <strong>Drag</strong> to rotate • <strong>Scroll</strong> to zoom
+        </p>
+    </div>
+
+    <!-- Hotspot Labels -->
+    <div class="hotspot-labels">
+        <div class="hotspot-label" id="label-person" data-panel="about">ABOUT ME</div>
+        <div class="hotspot-label" id="label-desk" data-panel="experience">EXPERIENCE</div>
+        <div class="hotspot-label" id="label-monitor" data-panel="projects">PROJECTS</div>
+        <div class="hotspot-label" id="label-shelf" data-panel="education">EDUCATION</div>
+        <div class="hotspot-label" id="label-couch" data-panel="contact">CONTACT</div>
+    </div>
+
+    <!-- Backdrop -->
+    <div class="backdrop" id="backdrop"></div>
+
+    <!-- Info Panels -->
+    <div class="info-panel" id="panel-about">
+        <div class="info-panel-header">
+            <div>
+                <p class="info-panel-tag">// ABOUT ME</p>
+                <h2 class="info-panel-title">Who I Am</h2>
+            </div>
+            <button class="close-btn" onclick="closePanel()">✕</button>
+        </div>
+        <div class="info-content">
+            <p>
+                I'm a passionate software developer with a keen interest in creating 
+                elegant solutions to complex problems. My journey in tech started with 
+                curiosity and has evolved into a deep commitment to building impactful applications.
+            </p>
+            <p>
+                When I'm not coding, you'll find me exploring new technologies, 
+                contributing to open-source projects, or diving into the latest developments 
+                in AI, GPU computing, and high-performance systems.
+            </p>
+            <p class="info-panel-tag" style="margin-top: 30px; margin-bottom: 12px;">// TECH STACK</p>
+            <div class="skills-grid">
+                <span class="skill-tag">Python</span>
+                <span class="skill-tag">JavaScript</span>
+                <span class="skill-tag">TypeScript</span>
+                <span class="skill-tag">React</span>
+                <span class="skill-tag">Node.js</span>
+                <span class="skill-tag">C++</span>
+                <span class="skill-tag">CUDA</span>
+                <span class="skill-tag">PyTorch</span>
+                <span class="skill-tag">Docker</span>
+                <span class="skill-tag">AWS</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel" id="panel-experience">
+        <div class="info-panel-header">
+            <div>
+                <p class="info-panel-tag">// EXPERIENCE</p>
+                <h2 class="info-panel-title">Where I've Worked</h2>
+            </div>
+            <button class="close-btn" onclick="closePanel()">✕</button>
+        </div>
+        <div class="info-content">
+            <div class="timeline">
+                <div class="timeline-item">
+                    <p class="timeline-date">January 2026 - Present</p>
+                    <h3 class="timeline-title">Technical Product Engineer</h3>
+                    <p class="timeline-company"><img src="image copy 3.png" alt="NVIDIA" class="company-logo"> NVIDIA • Metropolis Team</p>
+                    <p class="timeline-desc">
+                        Working on the Metropolis Team, driving technical product initiatives 
+                        for NVIDIA's vision AI and video analytics platform.
+                    </p>
+                </div>
+                <div class="timeline-item">
+                    <p class="timeline-date">September 2025 - December 2025</p>
+                    <h3 class="timeline-title">Software Engineer Intern</h3>
+                    <p class="timeline-company"><img src="629faa2e5b0f83e4c73f073e.png" alt="Nextiva" class="company-logo"> Nextiva • AI Operations Team</p>
+                    <p class="timeline-desc">
+                        Developed AI-powered solutions on the AI Operations Team, 
+                        building intelligent systems to enhance operational efficiency.
+                    </p>
+                </div>
+                <div class="timeline-item">
+                    <p class="timeline-date">May 2025 - August 2025</p>
+                    <h3 class="timeline-title">Software Engineer Intern</h3>
+                    <p class="timeline-company"><img src="image.png" alt="Apple" class="company-logo"> Apple • Identity Management Team</p>
+                    <p class="timeline-desc">
+                        Built secure identity management solutions at Apple, 
+                        working on authentication and authorization systems at scale.
+                    </p>
+                </div>
+                <div class="timeline-item">
+                    <p class="timeline-date">May 2024 - August 2024</p>
+                    <h3 class="timeline-title">Software Engineer Intern</h3>
+                    <p class="timeline-company"><img src="image copy.png" alt="Dell" class="company-logo"> Dell Technologies • Dell Optimizer Team</p>
+                    <p class="timeline-desc">
+                        Enhanced Dell Optimizer software, developing features to improve 
+                        system performance and user experience on Dell devices.
+                    </p>
+                </div>
+                <div class="timeline-item">
+                    <p class="timeline-date">May 2023 - August 2023</p>
+                    <h3 class="timeline-title">Software Engineer Intern</h3>
+                    <p class="timeline-company"><img src="image copy.png" alt="Dell" class="company-logo"> Dell Technologies • Experience Management Team</p>
+                    <p class="timeline-desc">
+                        Contributed to Dell's Experience Management platform, 
+                        building tools to enhance customer and employee experiences.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel" id="panel-projects">
+        <div class="info-panel-header">
+            <div>
+                <p class="info-panel-tag">// PROJECTS</p>
+                <h2 class="info-panel-title">What I've Built</h2>
+            </div>
+            <button class="close-btn" onclick="closePanel()">✕</button>
+        </div>
+        <div class="info-content">
+            <div class="projects-grid">
+                <a href="https://www.youtube.com/watch?v=W5_Gi4ggL88" target="_blank" class="project-card">
+                    <div class="project-image"><img src="image copy 4.png" alt="GAVID"></div>
+                    <h3 class="project-name">GAVID</h3>
+                    <p class="project-desc">GPU Accelerated Vision Inference Dashboard - Real-time computer vision powered by NVIDIA CUDA for lightning-fast inference.</p>
+                    <div class="project-tech">
+                        <span>CUDA</span>
+                        <span>Python</span>
+                        <span>Computer Vision</span>
+                    </div>
+                </a>
+                <div class="project-card">
+                    <div class="project-image">🧠</div>
+                    <h3 class="project-name">HiveMind</h3>
+                    <p class="project-desc">A decentralized AI swarm where autonomous agents collaborate, negotiate, and solve complex problems together - emergent intelligence through collective reasoning.</p>
+                    <div class="project-tech">
+                        <span>AI Agents</span>
+                        <span>LLMs</span>
+                        <span>Multi-Agent Systems</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="info-panel" id="panel-education">
+        <div class="info-panel-header">
+            <div>
+                <p class="info-panel-tag">// EDUCATION</p>
+                <h2 class="info-panel-title">Academic Background</h2>
+            </div>
+            <button class="close-btn" onclick="closePanel()">✕</button>
+        </div>
+        <div class="info-content">
+            <div class="education-item">
+                <img src="image copy 2.png" alt="ASU" class="education-logo">
+                <div class="education-info">
+                    <h3>Arizona State University</h3>
+                    <p class="degree">Bachelor of Science in Computer Systems Engineering</p>
+                    <p class="years">2022 - 2025</p>
+                </div>
+            </div>
+            <p style="margin-top: 24px;">
+                Relevant coursework: Data Structures, Algorithms, Machine Learning, 
+                Computer Graphics, Distributed Systems, Database Systems.
+            </p>
+        </div>
+    </div>
+
+    <div class="info-panel" id="panel-contact">
+        <div class="info-panel-header">
+            <div>
+                <p class="info-panel-tag">// CONTACT</p>
+                <h2 class="info-panel-title">Let's Connect</h2>
+            </div>
+            <button class="close-btn" onclick="closePanel()">✕</button>
+        </div>
+        <div class="info-content">
+            <p>
+                I'm always interested in hearing about new opportunities, 
+                interesting projects, or just having a chat about technology. 
+                Feel free to reach out!
+            </p>
+            <div class="contact-links">
+                <a href="mailto:hmousta1@asu.edu" class="contact-btn">
+                    <div class="contact-btn-icon">✉️</div>
+                    <div class="contact-btn-label">Email</div>
+                </a>
+                <a href="https://linkedin.com/in/hassan-moustafa04" target="_blank" class="contact-btn">
+                    <div class="contact-btn-icon">💼</div>
+                    <div class="contact-btn-label">LinkedIn</div>
+                </a>
+                <a href="https://github.com/hassanmoustafa04" target="_blank" class="contact-btn">
+                    <div class="contact-btn-icon">🐙</div>
+                    <div class="contact-btn-label">GitHub</div>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Controls Hint -->
+    <div class="controls-hint">
+        <kbd>DRAG</kbd> Rotate view<br>
+        <kbd>SCROLL</kbd> Zoom in/out<br>
+        <kbd>CLICK</kbd> Interact with objects<br>
+        <kbd>SPACE</kbd> Toggle lights<br>
+        <kbd>M</kbd> Unmute TV
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script>
+        // Scene setup
+        const scene = new THREE.Scene();
+        scene.background = new THREE.Color(0x1a1a28);
+        
+        const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 1000);
+        camera.position.set(14, 9, 14);
+        camera.lookAt(0, 2, 0);
+        
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.shadowMap.enabled = true;
+        renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+        
+        // Raycaster for clicking
+        const raycaster = new THREE.Raycaster();
+        const mouse = new THREE.Vector2();
+        
+        // Colors - BRIGHTER ROOM
+        const NVIDIA_GREEN = 0x76b900;
+        const WALL_COLOR = 0x3a3a55;
+        const FLOOR_COLOR = 0x6b5040;
+        const WOOD_COLOR = 0x8b6040;
+        const COUCH_COLOR = 0x404060;
+        const SKIN_COLOR = 0xc4956a;
+        const HAIR_COLOR = 0x0a0a0a; // Pure black hair
+        const PANTS_COLOR = 0x252535;
+        
+        // Texture loader
+        const textureLoader = new THREE.TextureLoader();
+        
+        // Load NVIDIA logo texture
+        const nvidiaTexture = textureLoader.load('https://upload.wikimedia.org/wikipedia/sco/thumb/2/21/Nvidia_logo.svg/351px-Nvidia_logo.svg.png');
+        nvidiaTexture.minFilter = THREE.NearestFilter;
+        nvidiaTexture.magFilter = THREE.NearestFilter;
+        
+        // Create video element for BIG TV - INSTANT PLAY
+        const video = document.createElement('video');
+        video.src = 'videoplayback.mp4';
+        video.loop = true;
+        video.muted = true;
+        video.playsInline = true;
+        video.autoplay = true;
+        video.preload = 'auto';
+        video.setAttribute('playsinline', '');
+        video.setAttribute('webkit-playsinline', '');
+        video.setAttribute('muted', '');
+        video.defaultMuted = true;
+        
+        // Append to DOM (helps with autoplay)
+        video.style.position = 'absolute';
+        video.style.opacity = '0';
+        video.style.pointerEvents = 'none';
+        video.style.width = '1px';
+        video.style.height = '1px';
+        document.body.appendChild(video);
+        
+        // Aggressive play attempts
+        const playVideo = () => {
+            video.play().catch(() => {});
+        };
+        
+        video.addEventListener('loadeddata', playVideo);
+        video.addEventListener('canplay', playVideo);
+        video.addEventListener('canplaythrough', playVideo);
+        video.load();
+        playVideo();
+        
+        // Also try on any interaction
+        const forcePlay = () => {
+            video.play().catch(() => {});
+        };
+        document.addEventListener('mousemove', forcePlay, { once: true });
+        document.addEventListener('click', forcePlay, { once: true });
+        document.addEventListener('touchstart', forcePlay, { once: true });
+        document.addEventListener('scroll', forcePlay, { once: true });
+        
+        // Create video texture for TV - high quality
+        const videoTexture = new THREE.VideoTexture(video);
+        videoTexture.minFilter = THREE.LinearFilter;
+        videoTexture.magFilter = THREE.LinearFilter;
+        videoTexture.format = THREE.RGBAFormat;
+        videoTexture.generateMipmaps = false;
+        
+        // Clickable objects storage
+        const clickableObjects = [];
+        
+        function createVoxel(width, height, depth, color, x = 0, y = 0, z = 0) {
+            const geometry = new THREE.BoxGeometry(width, height, depth);
+            const material = new THREE.MeshLambertMaterial({ color });
+            const mesh = new THREE.Mesh(geometry, material);
+            mesh.position.set(x, y, z);
+            mesh.castShadow = true;
+            mesh.receiveShadow = true;
+            return mesh;
+        }
+        
+        // Create room
+        function createRoom() {
+            const room = new THREE.Group();
+            
+            const floor = createVoxel(18, 0.5, 18, FLOOR_COLOR, 0, -0.25, 0);
+            floor.receiveShadow = true;
+            room.add(floor);
+            
+            for (let x = -8; x <= 8; x += 2) {
+                for (let z = -8; z <= 8; z += 2) {
+                    const plank = createVoxel(1.8, 0.1, 1.8, 0x8a6548, x, 0.1, z);
+                    room.add(plank);
+                }
+            }
+            
+            const backWall = createVoxel(18, 11, 0.5, WALL_COLOR, 0, 5.5, -9);
+            room.add(backWall);
+            
+            const leftWall = createVoxel(0.5, 11, 18, 0x353550, -9, 5.5, 0);
+            room.add(leftWall);
+            
+            // BIG TV on back wall - NBA DUNKS
+            const tvFrame = createVoxel(9, 5.5, 0.4, 0x0a0a0a, 0, 5.5, -8.75);
+            room.add(tvFrame);
+            
+            // TV bezel
+            const tvBezel = createVoxel(8.6, 5.1, 0.2, 0x151515, 0, 5.5, -8.6);
+            room.add(tvBezel);
+            
+            // TV Screen with video - 16:9 aspect ratio for no distortion
+            const tvScreenGeometry = new THREE.PlaneGeometry(8, 4.5);
+            const tvScreenMaterial = new THREE.MeshBasicMaterial({ 
+                map: videoTexture,
+                toneMapped: false
+            });
+            const tvScreen = new THREE.Mesh(tvScreenGeometry, tvScreenMaterial);
+            tvScreen.position.set(0, 5.5, -8.48);
+            room.add(tvScreen);
+            
+            // TV stand/mount
+            const tvMount = createVoxel(2, 0.4, 0.4, 0x0a0a0a, 0, 2.8, -8.65);
+            room.add(tvMount);
+            const tvMountArm = createVoxel(0.4, 0.6, 0.3, 0x0a0a0a, 0, 3.1, -8.65);
+            room.add(tvMountArm);
+            
+            // LED strip behind TV (ambient glow effect)
+            const ledTop = createVoxel(8.8, 0.2, 0.15, NVIDIA_GREEN, 0, 8.1, -8.8);
+            room.add(ledTop);
+            const ledBottom = createVoxel(8.8, 0.2, 0.15, NVIDIA_GREEN, 0, 2.9, -8.8);
+            room.add(ledBottom);
+            const ledLeft = createVoxel(0.2, 5.2, 0.15, NVIDIA_GREEN, -4.4, 5.5, -8.8);
+            room.add(ledLeft);
+            const ledRight = createVoxel(0.2, 5.2, 0.15, NVIDIA_GREEN, 4.4, 5.5, -8.8);
+            room.add(ledRight);
+            
+            return room;
+        }
+        
+        // Create couch
+        function createCouch() {
+            const couch = new THREE.Group();
+            
+            const base = createVoxel(5.5, 1.2, 2.8, COUCH_COLOR, 0, 0.6, 0);
+            couch.add(base);
+            
+            const back = createVoxel(5.5, 2.2, 0.6, COUCH_COLOR, 0, 2.1, -1.1);
+            couch.add(back);
+            
+            const leftArm = createVoxel(0.6, 1.6, 2.8, COUCH_COLOR, -2.75, 1.1, 0);
+            couch.add(leftArm);
+            
+            const rightArm = createVoxel(0.6, 1.6, 2.8, COUCH_COLOR, 2.75, 1.1, 0);
+            couch.add(rightArm);
+            
+            const cushion1 = createVoxel(1.6, 0.35, 2.2, 0x303052, -1.3, 1.45, 0.1);
+            couch.add(cushion1);
+            
+            const cushion2 = createVoxel(1.6, 0.35, 2.2, 0x303052, 1.3, 1.45, 0.1);
+            couch.add(cushion2);
+            
+            const pillow1 = createVoxel(0.85, 0.85, 0.45, NVIDIA_GREEN, -2.0, 1.9, -0.4);
+            couch.add(pillow1);
+            
+            const pillow2 = createVoxel(0.85, 0.85, 0.45, 0x404060, 2.0, 1.9, -0.4);
+            couch.add(pillow2);
+            
+            return couch;
+        }
+        
+        // Create person matching user's appearance
+        function createPerson() {
+            const person = new THREE.Group();
+            person.userData.clickable = true;
+            person.userData.panel = 'about';
+            
+            // Legs
+            const leftLeg = createVoxel(0.55, 0.55, 2.4, PANTS_COLOR, -0.45, 1.35, 1.7);
+            person.add(leftLeg);
+            
+            const rightLeg = createVoxel(0.55, 0.55, 2.4, PANTS_COLOR, 0.45, 1.35, 1.7);
+            person.add(rightLeg);
+            
+            // Shoes
+            const leftFoot = createVoxel(0.55, 0.38, 0.75, 0x1a1a1a, -0.45, 1.25, 3.0);
+            person.add(leftFoot);
+            
+            const rightFoot = createVoxel(0.55, 0.38, 0.75, 0x1a1a1a, 0.45, 1.25, 3.0);
+            person.add(rightFoot);
+            
+            // Torso - Black shirt
+            const torso = createVoxel(1.4, 1.6, 0.7, 0x0a0a0a, 0, 2.35, 0);
+            person.add(torso);
+            
+            // NVIDIA Logo on shirt using texture
+            const logoGeometry = new THREE.PlaneGeometry(0.8, 0.5);
+            const logoMaterial = new THREE.MeshBasicMaterial({ 
+                map: nvidiaTexture, 
+                transparent: true 
+            });
+            const shirtLogo = new THREE.Mesh(logoGeometry, logoMaterial);
+            shirtLogo.position.set(0, 2.35, 0.36);
+            person.add(shirtLogo);
+            
+            // Collar (polo style)
+            const collarLeft = createVoxel(0.28, 0.22, 0.18, 0x0a0a0a, -0.28, 3.08, 0.35);
+            collarLeft.rotation.z = 0.35;
+            person.add(collarLeft);
+            
+            const collarRight = createVoxel(0.28, 0.22, 0.18, 0x0a0a0a, 0.28, 3.08, 0.35);
+            collarRight.rotation.z = -0.35;
+            person.add(collarRight);
+            
+            // Arms - connected to body (short sleeves)
+            const leftUpperArm = createVoxel(0.42, 0.6, 0.42, 0x0a0a0a, -0.75, 2.55, 0.05);
+            leftUpperArm.rotation.z = 0.3;
+            person.add(leftUpperArm);
+            
+            const rightUpperArm = createVoxel(0.42, 0.6, 0.42, 0x0a0a0a, 0.75, 2.55, 0.05);
+            rightUpperArm.rotation.z = -0.3;
+            person.add(rightUpperArm);
+            
+            // Shoulder connectors
+            const leftShoulder = createVoxel(0.3, 0.35, 0.35, 0x0a0a0a, -0.6, 2.75, 0.05);
+            person.add(leftShoulder);
+            
+            const rightShoulder = createVoxel(0.3, 0.35, 0.35, 0x0a0a0a, 0.6, 2.75, 0.05);
+            person.add(rightShoulder);
+            
+            // Forearms (skin)
+            const leftForearm = createVoxel(0.36, 0.7, 0.36, SKIN_COLOR, -0.95, 1.95, 0.2);
+            leftForearm.rotation.x = 0.4;
+            leftForearm.rotation.z = 0.15;
+            person.add(leftForearm);
+            
+            const rightForearm = createVoxel(0.36, 0.7, 0.36, SKIN_COLOR, 0.95, 1.95, 0.2);
+            rightForearm.rotation.x = 0.4;
+            rightForearm.rotation.z = -0.15;
+            person.add(rightForearm);
+            
+            // Hands
+            const leftHand = createVoxel(0.32, 0.32, 0.25, SKIN_COLOR, -1.0, 1.45, 0.5);
+            person.add(leftHand);
+            
+            const rightHand = createVoxel(0.32, 0.32, 0.25, SKIN_COLOR, 1.0, 1.45, 0.5);
+            person.add(rightHand);
+            
+            // Phone
+            const phone = createVoxel(0.28, 0.45, 0.05, 0x1a1a1a, 1.05, 1.5, 0.65);
+            person.add(phone);
+            const phoneScreen = createVoxel(0.22, 0.38, 0.02, 0x4fc3f7, 1.05, 1.5, 0.68);
+            person.add(phoneScreen);
+            
+            // Head
+            const head = createVoxel(1.0, 1.05, 1.0, SKIN_COLOR, 0, 3.65, 0);
+            person.add(head);
+            
+            // Curly hair - lots of volume
+            const hairMain = createVoxel(1.2, 0.55, 1.1, HAIR_COLOR, 0, 4.2, -0.05);
+            person.add(hairMain);
+            
+            // Top curls
+            for (let i = 0; i < 10; i++) {
+                const angle = (i / 10) * Math.PI * 2;
+                const curl = createVoxel(0.28, 0.32, 0.28, HAIR_COLOR, 
+                    Math.cos(angle) * 0.45, 
+                    4.35 + Math.random() * 0.18, 
+                    Math.sin(angle) * 0.4 - 0.1);
+                person.add(curl);
+            }
+            
+            // Front curls
+            for (let i = 0; i < 6; i++) {
+                const frontCurl = createVoxel(0.22, 0.28 + Math.random() * 0.12, 0.22, HAIR_COLOR,
+                    -0.45 + i * 0.18,
+                    4.1 + Math.random() * 0.18,
+                    0.4);
+                person.add(frontCurl);
+            }
+            
+            // Side hair
+            const hairLeft = createVoxel(0.28, 0.75, 0.85, HAIR_COLOR, -0.6, 3.9, -0.1);
+            person.add(hairLeft);
+            
+            const hairRight = createVoxel(0.28, 0.75, 0.85, HAIR_COLOR, 0.6, 3.9, -0.1);
+            person.add(hairRight);
+            
+            // Back hair
+            const hairBack = createVoxel(1.1, 0.85, 0.35, HAIR_COLOR, 0, 3.9, -0.55);
+            person.add(hairBack);
+            
+            // Extra curl details
+            for (let i = 0; i < 8; i++) {
+                const topCurl = createVoxel(0.2, 0.22, 0.2, HAIR_COLOR,
+                    -0.4 + Math.random() * 0.8,
+                    4.45 + Math.random() * 0.12,
+                    -0.25 + Math.random() * 0.35);
+                person.add(topCurl);
+            }
+            
+            // Beard
+            const chinBeard = createVoxel(0.45, 0.28, 0.18, HAIR_COLOR, 0, 3.05, 0.5);
+            person.add(chinBeard);
+            
+            const jawLeft = createVoxel(0.18, 0.4, 0.28, HAIR_COLOR, -0.38, 3.2, 0.38);
+            person.add(jawLeft);
+            
+            const jawRight = createVoxel(0.18, 0.4, 0.28, HAIR_COLOR, 0.38, 3.2, 0.38);
+            person.add(jawRight);
+            
+            // Mustache
+            const mustache = createVoxel(0.38, 0.1, 0.12, HAIR_COLOR, 0, 3.3, 0.52);
+            person.add(mustache);
+            
+            // Soul patch
+            const soulPatch = createVoxel(0.18, 0.14, 0.1, HAIR_COLOR, 0, 3.16, 0.52);
+            person.add(soulPatch);
+            
+            // Eyebrows
+            const leftEyebrow = createVoxel(0.24, 0.07, 0.12, HAIR_COLOR, -0.24, 3.8, 0.52);
+            person.add(leftEyebrow);
+            
+            const rightEyebrow = createVoxel(0.24, 0.07, 0.12, HAIR_COLOR, 0.24, 3.8, 0.52);
+            person.add(rightEyebrow);
+            
+            // Eyes
+            const leftEyeWhite = createVoxel(0.2, 0.14, 0.1, 0xffffff, -0.24, 3.65, 0.52);
+            person.add(leftEyeWhite);
+            
+            const rightEyeWhite = createVoxel(0.2, 0.14, 0.1, 0xffffff, 0.24, 3.65, 0.52);
+            person.add(rightEyeWhite);
+            
+            // Pupils
+            const leftPupil = createVoxel(0.12, 0.12, 0.06, 0x2a1a0a, -0.24, 3.65, 0.56);
+            person.add(leftPupil);
+            
+            const rightPupil = createVoxel(0.12, 0.12, 0.06, 0x2a1a0a, 0.24, 3.65, 0.56);
+            person.add(rightPupil);
+            
+            // Nose
+            const nose = createVoxel(0.14, 0.22, 0.18, 0xb8845a, 0, 3.5, 0.54);
+            person.add(nose);
+            
+            // Lips
+            const lips = createVoxel(0.28, 0.08, 0.1, 0xa67458, 0, 3.3, 0.54);
+            person.add(lips);
+            
+            // Ears
+            const leftEar = createVoxel(0.12, 0.22, 0.18, SKIN_COLOR, -0.56, 3.6, 0);
+            person.add(leftEar);
+            
+            const rightEar = createVoxel(0.12, 0.22, 0.18, SKIN_COLOR, 0.56, 3.6, 0);
+            person.add(rightEar);
+            
+            // Neck
+            const neck = createVoxel(0.45, 0.35, 0.4, SKIN_COLOR, 0, 3.0, 0.12);
+            person.add(neck);
+            
+            clickableObjects.push(person);
+            return person;
+        }
+        
+        // Create desk with PC
+        function createDesk() {
+            const desk = new THREE.Group();
+            desk.userData.clickable = true;
+            desk.userData.panel = 'experience';
+            
+            const surface = createVoxel(4.5, 0.35, 2.2, WOOD_COLOR, 0, 2.55, 0);
+            desk.add(surface);
+            
+            const leg1 = createVoxel(0.35, 2.55, 0.35, WOOD_COLOR, -1.9, 1.28, -0.75);
+            desk.add(leg1);
+            const leg2 = createVoxel(0.35, 2.55, 0.35, WOOD_COLOR, 1.9, 1.28, -0.75);
+            desk.add(leg2);
+            const leg3 = createVoxel(0.35, 2.55, 0.35, WOOD_COLOR, -1.9, 1.28, 0.75);
+            desk.add(leg3);
+            const leg4 = createVoxel(0.35, 2.55, 0.35, WOOD_COLOR, 1.9, 1.28, 0.75);
+            desk.add(leg4);
+            
+            // PC Tower
+            const pcCase = createVoxel(1.0, 2.2, 1.8, 0x0a0a0a, -1.7, 3.85, 0);
+            desk.add(pcCase);
+            
+            // Glass panel
+            const pcGlass = createVoxel(0.06, 1.9, 1.5, 0x1a2a3a, -1.2, 3.85, 0);
+            pcGlass.material.transparent = true;
+            pcGlass.material.opacity = 0.35;
+            desk.add(pcGlass);
+            
+            // RGB strips
+            const rgbTop = createVoxel(0.06, 0.12, 1.4, NVIDIA_GREEN, -1.2, 4.7, 0);
+            desk.add(rgbTop);
+            const rgbBottom = createVoxel(0.06, 0.12, 1.4, NVIDIA_GREEN, -1.2, 2.95, 0);
+            desk.add(rgbBottom);
+            const rgbSide = createVoxel(0.06, 1.8, 0.12, NVIDIA_GREEN, -1.2, 3.85, 0.65);
+            desk.add(rgbSide);
+            
+            // GPU inside
+            const gpu = createVoxel(0.7, 0.18, 0.9, 0x2a2a2a, -1.6, 3.4, 0);
+            desk.add(gpu);
+            const gpuRgb = createVoxel(0.55, 0.1, 0.7, NVIDIA_GREEN, -1.5, 3.45, 0);
+            desk.add(gpuRgb);
+            
+            // NVIDIA logo on PC case
+            const pcLogoGeometry = new THREE.PlaneGeometry(0.5, 0.3);
+            const pcLogoMaterial = new THREE.MeshBasicMaterial({ 
+                map: nvidiaTexture, 
+                transparent: true 
+            });
+            const pcLogo = new THREE.Mesh(pcLogoGeometry, pcLogoMaterial);
+            pcLogo.position.set(-1.17, 4.3, 0);
+            pcLogo.rotation.y = Math.PI / 2;
+            desk.add(pcLogo);
+            
+            clickableObjects.push(desk);
+            return desk;
+        }
+        
+        // Create monitor with code on screen
+        function createMonitor() {
+            const monitor = new THREE.Group();
+            monitor.userData.clickable = true;
+            monitor.userData.panel = 'projects';
+            
+            const stand = createVoxel(0.45, 0.9, 0.45, 0x1a1a1a, 0, 3.1, 0);
+            monitor.add(stand);
+            
+            const base = createVoxel(1.4, 0.18, 0.9, 0x1a1a1a, 0, 2.8, 0);
+            monitor.add(base);
+            
+            const monitorBody = createVoxel(3.2, 2.0, 0.22, 0x1a1a1a, 0, 4.55, -0.2);
+            monitor.add(monitorBody);
+            
+            // Screen background
+            const screen = createVoxel(3.0, 1.8, 0.12, 0x0a1018, 0, 4.55, -0.05);
+            monitor.add(screen);
+            
+            // Code lines on screen
+            for (let i = 0; i < 10; i++) {
+                const line = createVoxel(2.2 - Math.random() * 0.9, 0.1, 0.06, 
+                    i % 3 === 0 ? NVIDIA_GREEN : (i % 3 === 1 ? 0x4fc3f7 : 0xff7043), 
+                    -0.25 + Math.random() * 0.35, 
+                    5.2 - i * 0.16, 
+                    0.02);
+                monitor.add(line);
+            }
+            
+            clickableObjects.push(monitor);
+            return monitor;
+        }
+        
+        // Create shelf
+        function createShelf() {
+            const shelf = new THREE.Group();
+            shelf.userData.clickable = true;
+            shelf.userData.panel = 'education';
+            
+            const board1 = createVoxel(3.5, 0.22, 0.9, WOOD_COLOR, 0, 6.2, 0);
+            shelf.add(board1);
+            
+            const board2 = createVoxel(3.5, 0.22, 0.9, WOOD_COLOR, 0, 4.6, 0);
+            shelf.add(board2);
+            
+            // Books
+            const book1 = createVoxel(0.35, 0.9, 0.7, 0xe74c3c, -1.1, 6.75, 0);
+            shelf.add(book1);
+            
+            const book2 = createVoxel(0.28, 0.8, 0.7, NVIDIA_GREEN, -0.65, 6.7, 0);
+            shelf.add(book2);
+            
+            const book3 = createVoxel(0.4, 1.0, 0.7, 0x3498db, -0.2, 6.8, 0);
+            shelf.add(book3);
+            
+            // Plant
+            const pot = createVoxel(0.55, 0.45, 0.55, 0xd35400, 0.9, 6.5, 0);
+            shelf.add(pot);
+            
+            const plant1 = createVoxel(0.18, 0.55, 0.18, 0x27ae60, 0.8, 6.95, 0);
+            shelf.add(plant1);
+            const plant2 = createVoxel(0.18, 0.65, 0.18, 0x2ecc71, 0.95, 7.0, 0.12);
+            shelf.add(plant2);
+            
+            // GPU box with NVIDIA logo
+            const gpuBox = createVoxel(1.0, 0.8, 0.7, 0x0a0a0a, 0.55, 5.1, 0);
+            shelf.add(gpuBox);
+            
+            // NVIDIA logo on box
+            const boxLogoGeometry = new THREE.PlaneGeometry(0.55, 0.35);
+            const boxLogoMaterial = new THREE.MeshBasicMaterial({ 
+                map: nvidiaTexture, 
+                transparent: true 
+            });
+            const boxLogo = new THREE.Mesh(boxLogoGeometry, boxLogoMaterial);
+            boxLogo.position.set(0.55, 5.2, 0.36);
+            shelf.add(boxLogo);
+            
+            clickableObjects.push(shelf);
+            return shelf;
+        }
+        
+        // Create poster with NVIDIA logo
+        function createPoster() {
+            const poster = new THREE.Group();
+            poster.userData.clickable = true;
+            poster.userData.panel = 'contact';
+            
+            // Frame
+            const frame = createVoxel(3.0, 2.2, 0.18, 0x0a0a0a, 0, 0, 0);
+            poster.add(frame);
+            
+            // Background
+            const bg = createVoxel(2.7, 1.9, 0.1, 0x0f0f0f, 0, 0, 0.06);
+            poster.add(bg);
+            
+            // NVIDIA logo as texture
+            const logoGeometry = new THREE.PlaneGeometry(2.0, 1.25);
+            const logoMaterial = new THREE.MeshBasicMaterial({ 
+                map: nvidiaTexture, 
+                transparent: true 
+            });
+            const logo = new THREE.Mesh(logoGeometry, logoMaterial);
+            logo.position.set(0, 0, 0.12);
+            poster.add(logo);
+            
+            clickableObjects.push(poster);
+            return poster;
+        }
+        
+        // Create bed
+        function createBed() {
+            const bed = new THREE.Group();
+            
+            const frame = createVoxel(3.8, 0.9, 5.5, WOOD_COLOR, 0, 0.45, 0);
+            bed.add(frame);
+            
+            const mattress = createVoxel(3.6, 0.55, 5.3, 0xf0f0f0, 0, 1.0, 0);
+            bed.add(mattress);
+            
+            const pillow = createVoxel(2.8, 0.45, 0.9, 0xffffff, 0, 1.5, -2.0);
+            bed.add(pillow);
+            
+            const blanket = createVoxel(3.5, 0.22, 3.2, 0x1a2a3a, 0, 1.35, 0.9);
+            bed.add(blanket);
+            
+            const blanketStripe = createVoxel(3.5, 0.06, 0.45, NVIDIA_GREEN, 0, 1.5, 0);
+            bed.add(blanketStripe);
+            
+            const headboard = createVoxel(3.8, 2.2, 0.35, WOOD_COLOR, 0, 1.95, -2.8);
+            bed.add(headboard);
+            
+            return bed;
+        }
+        
+        // Create rug
+        function createRug() {
+            const rug = new THREE.Group();
+            
+            const rugBase = createVoxel(4.5, 0.12, 3.5, 0x352848, 0, 0.1, 0);
+            rug.add(rugBase);
+            
+            const pattern1 = createVoxel(4.0, 0.06, 0.25, NVIDIA_GREEN, 0, 0.16, -1.2);
+            rug.add(pattern1);
+            
+            const pattern2 = createVoxel(4.0, 0.06, 0.25, NVIDIA_GREEN, 0, 0.16, 1.2);
+            rug.add(pattern2);
+            
+            return rug;
+        }
+        
+        // Create coffee table
+        function createCoffeeTable() {
+            const table = new THREE.Group();
+            
+            const top = createVoxel(2.2, 0.22, 1.4, WOOD_COLOR, 0, 1.05, 0);
+            table.add(top);
+            
+            const leg1 = createVoxel(0.22, 1.05, 0.22, WOOD_COLOR, -0.9, 0.52, -0.5);
+            table.add(leg1);
+            const leg2 = createVoxel(0.22, 1.05, 0.22, WOOD_COLOR, 0.9, 0.52, -0.5);
+            table.add(leg2);
+            const leg3 = createVoxel(0.22, 1.05, 0.22, WOOD_COLOR, -0.9, 0.52, 0.5);
+            table.add(leg3);
+            const leg4 = createVoxel(0.22, 1.05, 0.22, WOOD_COLOR, 0.9, 0.52, 0.5);
+            table.add(leg4);
+            
+            // Controller
+            const controller = createVoxel(0.55, 0.18, 0.4, 0x1a1a1a, -0.55, 1.25, 0);
+            table.add(controller);
+            const btn1 = createVoxel(0.1, 0.06, 0.1, NVIDIA_GREEN, -0.65, 1.35, 0);
+            table.add(btn1);
+            
+            // Cup
+            const cup = createVoxel(0.35, 0.45, 0.35, 0xf5f5f5, 0.55, 1.38, 0);
+            table.add(cup);
+            const coffee = createVoxel(0.28, 0.12, 0.28, 0x3d2817, 0.55, 1.55, 0);
+            table.add(coffee);
+            
+            return table;
+        }
+        
+        // Create lamp
+        function createLamp() {
+            const lamp = new THREE.Group();
+            
+            const base = createVoxel(0.55, 0.22, 0.55, 0x1a1a1a, 0, 0.12, 0);
+            lamp.add(base);
+            
+            const pole = createVoxel(0.12, 3.2, 0.12, 0x2a2a2a, 0, 1.7, 0);
+            lamp.add(pole);
+            
+            const shade = createVoxel(0.9, 0.7, 0.9, 0xfff5e0, 0, 3.55, 0);
+            shade.material.transparent = true;
+            shade.material.opacity = 0.85;
+            lamp.add(shade);
+            
+            return lamp;
+        }
+        
+        
+        // Lighting - BRIGHT ROOM
+        const ambientLight = new THREE.AmbientLight(0x606080, 1.2);
+        scene.add(ambientLight);
+        
+        const mainLight = new THREE.PointLight(0xffffff, 1.4, 40);
+        mainLight.position.set(0, 10, 0);
+        mainLight.castShadow = true;
+        scene.add(mainLight);
+        
+        // Extra ceiling lights for brightness
+        const ceilingLight1 = new THREE.PointLight(0xffffff, 0.9, 25);
+        ceilingLight1.position.set(-4, 9, -4);
+        scene.add(ceilingLight1);
+        
+        const ceilingLight2 = new THREE.PointLight(0xffffff, 0.9, 25);
+        ceilingLight2.position.set(4, 9, -4);
+        scene.add(ceilingLight2);
+        
+        const ceilingLight3 = new THREE.PointLight(0xffffff, 0.9, 25);
+        ceilingLight3.position.set(0, 9, 4);
+        scene.add(ceilingLight3);
+        
+        const accentLight = new THREE.PointLight(NVIDIA_GREEN, 0.8, 22);
+        accentLight.position.set(-7, 4.5, 0);
+        scene.add(accentLight);
+        
+        const monitorLight = new THREE.PointLight(0x4fc3f7, 0.6, 14);
+        monitorLight.position.set(-6.5, 5, -5.5);
+        scene.add(monitorLight);
+        
+        const moonLight = new THREE.DirectionalLight(0xaabbff, 0.5);
+        moonLight.position.set(-3, 9, -6);
+        scene.add(moonLight);
+        
+        const lampLight = new THREE.PointLight(0xfff5e6, 0.8, 10);
+        lampLight.position.set(3.5, 3.8, 5.5);
+        scene.add(lampLight);
+        
+        // Fill light from front
+        const fillLight = new THREE.DirectionalLight(0xffffff, 0.6);
+        fillLight.position.set(5, 8, 10);
+        scene.add(fillLight);
+        
+        // Build scene
+        const room = createRoom();
+        scene.add(room);
+        
+        const couch = createCouch();
+        couch.position.set(0, 0, 2.5);
+        scene.add(couch);
+        
+        const person = createPerson();
+        person.position.set(0, 0, 2.5);
+        person.rotation.x = -0.15;
+        scene.add(person);
+        
+        const desk = createDesk();
+        desk.position.set(-6, 0, -5.5);
+        scene.add(desk);
+        
+        const monitor = createMonitor();
+        monitor.position.set(-5.2, 0, -5.5);
+        scene.add(monitor);
+        
+        const bed = createBed();
+        bed.position.set(5, 0, -4.5);
+        scene.add(bed);
+        
+        const shelf = createShelf();
+        shelf.position.set(-8.5, 0, 0.5);
+        scene.add(shelf);
+        
+        const rug = createRug();
+        rug.position.set(0, 0, 4.5);
+        scene.add(rug);
+        
+        const lamp = createLamp();
+        lamp.position.set(3.5, 0, 5.5);
+        scene.add(lamp);
+        
+        // Poster removed - big TV is on the back wall now
+        
+        const coffeeTable = createCoffeeTable();
+        coffeeTable.position.set(0, 0, 5.5);
+        scene.add(coffeeTable);
+        
+        
+        // Camera controls - smooth movement
+        let isDragging = false;
+        let previousMousePosition = { x: 0, y: 0 };
+        let cameraAngle = { x: 0.5, y: 0.38 };
+        let targetCameraAngle = { x: 0.5, y: 0.38 };
+        let cameraDistance = 18;
+        let targetCameraDistance = 18;
+        
+        const canvas = renderer.domElement;
+        
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+        });
+        
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+        });
+        
+        document.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const deltaX = e.clientX - previousMousePosition.x;
+            const deltaY = e.clientY - previousMousePosition.y;
+            
+            targetCameraAngle.x += deltaX * 0.005;
+            targetCameraAngle.y = Math.max(0.08, Math.min(0.9, targetCameraAngle.y + deltaY * 0.005));
+            
+            previousMousePosition = { x: e.clientX, y: e.clientY };
+        });
+        
+        canvas.addEventListener('wheel', (e) => {
+            targetCameraDistance = Math.max(10, Math.min(28, targetCameraDistance + e.deltaY * 0.018));
+        });
+        
+        // Click handling
+        function onClick(event) {
+            mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+            mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            
+            raycaster.setFromCamera(mouse, camera);
+            
+            const allMeshes = [];
+            clickableObjects.forEach(obj => {
+                obj.traverse(child => {
+                    if (child.isMesh) {
+                        child.userData.parentGroup = obj;
+                        allMeshes.push(child);
+                    }
+                });
+            });
+            
+            const intersects = raycaster.intersectObjects(allMeshes);
+            
+            if (intersects.length > 0) {
+                const clickedMesh = intersects[0].object;
+                const parentGroup = clickedMesh.userData.parentGroup;
+                
+                if (parentGroup && parentGroup.userData.panel) {
+                    openPanel(parentGroup.userData.panel);
+                }
+            }
+        }
+        
+        canvas.addEventListener('click', (e) => {
+            if (Math.abs(e.clientX - previousMousePosition.x) < 5 && 
+                Math.abs(e.clientY - previousMousePosition.y) < 5) {
+                onClick(e);
+            }
+        });
+        
+        // Panel functions
+        function openPanel(panelId) {
+            document.getElementById('introCard').classList.add('hidden');
+            document.getElementById('backdrop').classList.add('active');
+            document.getElementById(`panel-${panelId}`).classList.add('active');
+            hideLabels();
+            
+            // If opening projects panel, unmute and play video
+            if (panelId === 'projects') {
+                video.muted = false;
+                video.play();
+            }
+        }
+        
+        function closePanel() {
+            document.getElementById('backdrop').classList.remove('active');
+            document.querySelectorAll('.info-panel').forEach(panel => {
+                panel.classList.remove('active');
+            });
+            // Mute video when closing panel
+            video.muted = true;
+        }
+        
+        document.getElementById('backdrop').addEventListener('click', closePanel);
+        
+        // Hotspot labels
+        function updateLabels() {
+            const labelConfigs = [
+                { id: 'label-person', object: person, offset: new THREE.Vector3(0, 4.8, 0) },
+                { id: 'label-desk', object: desk, offset: new THREE.Vector3(0, 4, 0) },
+                { id: 'label-monitor', object: monitor, offset: new THREE.Vector3(0, 6, 0) },
+                { id: 'label-shelf', object: shelf, offset: new THREE.Vector3(0, 7.5, 0) },
+                { id: 'label-couch', object: couch, offset: new THREE.Vector3(2, 2.5, 0) }
+            ];
+            
+            labelConfigs.forEach(config => {
+                const label = document.getElementById(config.id);
+                const worldPos = new THREE.Vector3();
+                config.object.getWorldPosition(worldPos);
+                worldPos.add(config.offset);
+                
+                const screenPos = worldPos.clone().project(camera);
+                
+                const x = (screenPos.x * 0.5 + 0.5) * window.innerWidth;
+                const y = (-screenPos.y * 0.5 + 0.5) * window.innerHeight;
+                
+                label.style.left = x + 'px';
+                label.style.top = y + 'px';
+                
+                // Check if in view
+                if (screenPos.z < 1 && x > 0 && x < window.innerWidth && y > 0 && y < window.innerHeight) {
+                    label.classList.add('visible');
+                } else {
+                    label.classList.remove('visible');
+                }
+            });
+        }
+        
+        function hideLabels() {
+            document.querySelectorAll('.hotspot-label').forEach(label => {
+                label.classList.remove('visible');
+            });
+        }
+        
+        // Label click handlers
+        document.querySelectorAll('.hotspot-label').forEach(label => {
+            label.addEventListener('click', () => {
+                const panelId = label.dataset.panel;
+                if (panelId) openPanel(panelId);
+            });
+        });
+        
+        // Toggle lights
+        let lightsOn = true;
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                lightsOn = !lightsOn;
+                mainLight.intensity = lightsOn ? 1.4 : 0.25;
+                lampLight.intensity = lightsOn ? 0.8 : 0.15;
+                ambientLight.intensity = lightsOn ? 1.2 : 0.2;
+                ceilingLight1.intensity = lightsOn ? 0.9 : 0.1;
+                ceilingLight2.intensity = lightsOn ? 0.9 : 0.1;
+                ceilingLight3.intensity = lightsOn ? 0.9 : 0.1;
+            }
+            // M key to toggle video mute
+            if (e.code === 'KeyM') {
+                video.muted = !video.muted;
+                if (!video.muted) video.play();
+            }
+        });
+        
+        // Animation
+        let time = 0;
+        
+        function animate() {
+            requestAnimationFrame(animate);
+            
+            time += 0.016;
+            
+            // Update video texture
+            if (video.readyState >= video.HAVE_CURRENT_DATA) {
+                videoTexture.needsUpdate = true;
+            }
+            
+            // Smooth camera interpolation (lerp)
+            cameraAngle.x += (targetCameraAngle.x - cameraAngle.x) * 0.08;
+            cameraAngle.y += (targetCameraAngle.y - cameraAngle.y) * 0.08;
+            cameraDistance += (targetCameraDistance - cameraDistance) * 0.08;
+            
+            // Update camera position
+            camera.position.x = Math.sin(cameraAngle.x) * cameraDistance;
+            camera.position.z = Math.cos(cameraAngle.x) * cameraDistance;
+            camera.position.y = cameraAngle.y * cameraDistance * 0.55 + 4;
+            camera.lookAt(0, 2.5, 0);
+            
+            // Breathing animation
+            person.children.forEach((child, i) => {
+                if (i >= 4 && i <= 9) {
+                    child.position.y += Math.sin(time * 1.5) * 0.001;
+                }
+            });
+            
+            // RGB pulsing
+            accentLight.intensity = 0.55 + Math.sin(time * 2) * 0.18;
+            
+            // Monitor flicker
+            monitorLight.intensity = 0.4 + Math.random() * 0.1;
+            
+            // Update labels if no panel is open
+            if (!document.querySelector('.info-panel.active')) {
+                updateLabels();
+            }
+            
+            renderer.render(scene, camera);
+        }
+        
+        // Handle resize
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+        
+        // Auto-transition intro screen
+        const introScreen = document.getElementById('intro-screen');
+        
+        // Start video IMMEDIATELY
+        video.play().catch(() => {});
+        
+        // Auto fade out intro after animation completes
+        setTimeout(() => {
+            introScreen.classList.add('hidden');
+        }, 2500);
+        
+        // Keep hammering play until it works
+        const forceVideoPlay = setInterval(() => {
+            video.play().catch(() => {});
+            if (!video.paused && video.currentTime > 0) {
+                clearInterval(forceVideoPlay);
+            }
+        }, 50);
+        
+        setTimeout(() => clearInterval(forceVideoPlay), 15000);
+        
+        animate();
+    </script>
+</body>
+</html>
