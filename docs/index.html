@@ -644,7 +644,7 @@
     <div id="intro-screen">
         <div class="intro-greeting">Welcome</div>
         <h1 class="intro-name">Hi, I'm <span>Hassan Moustafa</span></h1>
-        <p class="intro-role">Technical Product Engineer @ NVIDIA</p>
+        <p class="intro-role">Engineer @ NVIDIA</p>
     </div>
 
     <div id="canvas-container"></div>
@@ -662,7 +662,7 @@
         <span class="intro-tag">// WELCOME TO MY SPACE</span>
         <h1 class="intro-title">Hi, I'm <span class="highlight">Hassan Moustafa</span></h1>
         <p class="intro-subtitle">
-            Technical Product Engineer at NVIDIA, passionate about GPU computing, 
+            Engineer at NVIDIA, passionate about GPU computing, 
             AI, and building innovative solutions. Explore my room to learn more about me!
         </p>
         <p class="intro-hint">
@@ -730,11 +730,11 @@
             <div class="timeline">
                 <div class="timeline-item">
                     <p class="timeline-date">January 2026 - Present</p>
-                    <h3 class="timeline-title">Technical Product Engineer</h3>
-                    <p class="timeline-company"><img src="image copy 3.png" alt="NVIDIA" class="company-logo"> NVIDIA • Metropolis Team</p>
+                    <h3 class="timeline-title">Engineer</h3>
+                    <p class="timeline-company"><img src="image copy 3.png" alt="NVIDIA" class="company-logo"> NVIDIA • Metropolis Technical Marketing Engineering</p>
                     <p class="timeline-desc">
-                        Working on the Metropolis Team, driving technical product initiatives 
-                        for NVIDIA's vision AI and video analytics platform.
+                        Working on the Metropolis Team, driving technical initiatives 
+                        for NVIDIA's physical AI and computer vision platform.
                     </p>
                 </div>
                 <div class="timeline-item">
@@ -844,11 +844,6 @@
             <button class="close-btn" onclick="closePanel()">✕</button>
         </div>
         <div class="info-content">
-            <p>
-                I'm always interested in hearing about new opportunities, 
-                interesting projects, or just having a chat about technology. 
-                Feel free to reach out!
-            </p>
             <div class="contact-links">
                 <a href="mailto:hmousta1@asu.edu" class="contact-btn">
                     <div class="contact-btn-icon">✉️</div>
@@ -921,7 +916,8 @@
         video.muted = true;
         video.playsInline = true;
         video.autoplay = true;
-        video.preload = 'auto';
+        // Only preload on desktop or fast connections to avoid mobile timeout
+        video.preload = window.innerWidth > 768 ? 'auto' : 'metadata';
         video.setAttribute('playsinline', '');
         video.setAttribute('webkit-playsinline', '');
         video.setAttribute('muted', '');
@@ -935,7 +931,7 @@
         video.style.height = '1px';
         document.body.appendChild(video);
         
-        // Aggressive play attempts
+        // Aggressive play attempts - with timeout to prevent blocking
         const playVideo = () => {
             video.play().catch(() => {});
         };
@@ -943,8 +939,12 @@
         video.addEventListener('loadeddata', playVideo);
         video.addEventListener('canplay', playVideo);
         video.addEventListener('canplaythrough', playVideo);
-        video.load();
-        playVideo();
+        
+        // Don't block page load waiting for video
+        setTimeout(() => {
+            video.load();
+            playVideo();
+        }, 100);
         
         // Also try on any interaction
         const forcePlay = () => {
